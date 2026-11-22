@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DealDekho: Swiggy vs Zomato</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fff8f1; --card:#ffffff; --ink:#1d1a17; --muted:#7a6f66; --line:#efe3d6;
+    --accent:#ff5a1f; --accent2:#e23744; --swiggy:#fc8019; --zomato:#e23744; --good:#118a4f;
+    --radius:18px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#16120f; --card:#211c18; --ink:#f6efe8; --muted:#a89a8d; --line:#342b25; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Outfit,system-ui,sans-serif;font-size:16px;line-height:1.4}
+  .wrap{max-width:560px;margin:0 auto;padding:18px 16px 60px}
+  header{display:flex;align-items:center;gap:12px;margin:4px 0 16px}
+  .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--swiggy),var(--zomato));display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px}
+  h1{font-size:24px;margin:0;font-weight:800;letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:14px;margin:0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--line)}
+  .dot{width:8px;height:8px;border-radius:50%;background:#bbb}
+  .chip.ok .dot{background:var(--good)} .chip.bad .dot{background:var(--zomato)} .chip.wait .dot{background:#e8a33d}
+  label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:12px 0 6px}
+  label:first-child{margin-top:0}
+  input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px}
+  textarea{resize:vertical;min-height:64px}
+  .row{display:flex;gap:10px}
+  .row>div{flex:1}
+  .want{position:relative}
+  .mic{position:absolute;right:8px;bottom:8px;width:40px;height:40px;border-radius:50%;border:0;background:var(--line);color:var(--ink);font-size:18px;cursor:pointer;display:none}
+  .mic.on{background:var(--accent);color:#fff}
+  .toggle{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px}
+  .toggle input{width:auto}
+  .btn{width:100%;border:0;border-radius:14px;padding:15px;font:inherit;font-weight:700;font-size:17px;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--swiggy),var(--zomato))}
+  .btn:disabled{opacity:.55;cursor:default}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-size:15px;padding:11px}
+  .quick{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
+  .quick button{flex:none;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer}
+  .log{font-size:13px;color:var(--muted);max-height:180px;overflow:auto;margin:0;padding-left:18px}
+  .log li{margin:3px 0}
+  .best{border:2px solid var(--good)}
+  .tag{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;color:#fff}
+  .tag.Swiggy{background:var(--swiggy)} .tag.Zomato{background:var(--zomato)}
+  .price{font-size:34px;font-weight:800;letter-spacing:-.5px}
+  .strike{color:var(--muted);text-decoration:line-through;font-size:16px;margin-left:8px}
+  .save{color:var(--good);font-weight:700}
+  .how{background:var(--bg);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:14px}
+  .how b{font-weight:700}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  td.num{text-align:right;white-space:nowrap}
+  .open{display:flex;gap:8px;margin-top:12px}
+  .open a{flex:1;text-align:center;text-decoration:none;color:#fff;font-weight:700;padding:11px;border-radius:12px}
+  .open a.s{background:var(--swiggy)} .open a.z{background:var(--zomato)}
+  .warn{background:#fff1e6;color:#7a3a00;border-color:#ffd2b0}
+  @media (prefers-color-scheme: dark){ .warn{background:#3a2414;color:#ffcfa6;border-color:#5a3418} }
+  .muted{color:var(--muted);font-size:13px}
+  .hidden{display:none}
+  .h-item{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+  .h-item:first-child{border-top:0}
+  .h-main{flex:1;min-width:0;cursor:pointer}
+  .h-q{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .h-btn{flex:none;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;cursor:pointer}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">₹</div>
+    <div>
+      <h1>DealDekho</h1>
+      <p class="sub">Cheapest way to order, Swiggy vs Zomato, offers included</p>
+    </div>
+  </header>
+
+  <div id="noMcp" class="card warn hidden">
+    Open this page inside the Claude app or on claude.ai so it can use your Swiggy and Zomato accounts.
+  </div>
+
+  <div class="card">
+    <div class="chips">
+      <span class="chip" id="chipS"><span class="dot"></span>Swiggy</span>
+      <span class="chip" id="chipZ"><span class="dot"></span>Zomato</span>
+    </div>
+    <p class="muted" id="connMsg" style="margin:10px 0 0">Tap below to load your saved addresses.</p>
+    <div id="addrBox" class="hidden">
+      <label for="addrS">Swiggy delivery address</label>
+      <select id="addrS"></select>
+      <label for="addrZ">Zomato delivery address (same place)</label>
+      <select id="addrZ"></select>
+    </div>
+    <label for="area">Deliver to (label or area, used if the lists are empty)</label>
+    <input id="area" placeholder="e.g. Flat, JP Nagar 9th Phase, Bengaluru">
+    <div style="margin-top:12px"><button class="btn ghost" id="loadBtn">Load my addresses</button></div>
+  </div>
+
+  <div class="card">
+    <label for="want">What do you want?</label>
+    <div class="want">
+      <textarea id="want" placeholder="e.g. paneer biryani, or any pizza, or McDonald's burger meal"></textarea>
+      <button class="mic" id="mic" title="Speak">🎤</button>
+    </div>
+    <div class="quick" id="quick">
+      <button>Biryani</button><button>Pizza</button><button>Burger meal</button><button>North Indian thali</button><button>Momos</button><button>Rolls</button>
+    </div>
+    <div class="row">
+      <div><label for="people">People</label><input id="people" type="number" min="1" value="1" inputmode="numeric"></div>
+      <div><label for="budget">Budget (₹, optional)</label><input id="budget" type="number" min="0" placeholder="no limit" inputmode="numeric"></div>
+    </div>
+    <label for="pay">How you can pay (cards, UPI apps)</label>
+    <input id="pay" placeholder="e.g. HDFC credit card, GPay, Paytm, Swiggy One">
+    <div class="toggle"><input type="checkbox" id="veg"><label for="veg" style="margin:0;color:var(--ink);font-weight:500">Veg only</label></div>
+    <p class="muted" style="margin:10px 0 0">Note: checking Swiggy prices replaces whatever is in your Swiggy cart right now. Nothing is ever ordered.</p>
+    <div style="margin-top:14px"><button class="btn" id="go">Find best deal</button></div>
+  </div>
+
+  <div class="card hidden" id="progress">
+    <div style="font-weight:700;margin-bottom:6px" id="progTitle"><span class="spin"></span>Checking both apps…</div>
+    <ul class="log" id="log"></ul>
+    <div style="margin-top:10px"><button class="btn ghost" id="stop">Stop</button></div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="card hidden" id="histCard">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <b>Recent searches</b>
+      <button class="btn ghost" id="histClear" style="width:auto;padding:6px 12px;font-size:13px">Clear</button>
+    </div>
+    <div id="hist" style="margin-top:8px"></div>
+  </div>
+  <p class="muted" style="text-align:center">Prices and offers change fast. Results are for right now.</p>
+</div>
+
+<script>
+const SW = "Swiggy", ZO = "Zomato";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try { return localStorage.getItem("dd_"+k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem("dd_"+k, v); } catch(e){} }
+};
+let mcp = null, sample = null, abortCtl = null;
+
+/* ---------- tool catalogue (schemas from the connectors; refreshed via describeTool when allowed) ---------- */
+const loc = {addressId:{type:"string",description:"Saved Swiggy address ID"}};
+const TOOLS = [
+  {server:SW, tool:"get_addresses", desc:"Swiggy: list the user's saved delivery addresses with their IDs.",
+   schema:{type:"object",properties:{page:{type:"number"}}}},
+  {server:ZO, tool:"get_saved_addresses_for_user", desc:"Zomato: list the user's saved delivery addresses with their address_id.",
+   schema:{type:"object",properties:{}}},
+  {server:SW, tool:"search_restaurants", desc:"Swiggy: search restaurants delivering to the address by dish, cuisine or name. Returns IDs, rating, ETA, availability.",
+   schema:{type:"object",properties:{...loc,query:{type:"string"},offset:{type:"number"}},required:["query","addressId"]}},
+  {server:SW, tool:"search_menu", desc:"Swiggy: search dishes near the address, optionally inside one restaurant (restaurantIdOfAddedItem). Returns menu item IDs, prices, variants and addons.",
+   schema:{type:"object",properties:{...loc,query:{type:"string"},restaurantIdOfAddedItem:{type:"string"},vegFilter:{type:"number",enum:[0,1]},offset:{type:"number"}},required:["query","addressId"]}},
+  {server:SW, tool:"get_restaurant_menu", desc:"Swiggy: a restaurant's menu by category, paginated (pageSize max 8).",
+   schema:{type:"object",properties:{...loc,restaurantId:{type:"string"},page:{type:"number"},pageSize:{type:"number"}},required:["restaurantId","addressId"]}},
+  {server:SW, tool:"update_food_cart", desc:"Swiggy: put items in the cart (one restaurant; replaces the existing cart). cartItems is an array of {menu_item_id: string, quantity: number, variants?: [{group_id, variation_id}] (if the menu item has 'variations'), variantsV2?: [{group_id, variation_id}] (if it has 'variantsV2'), addons?: [{group_id, choice_id}]}. Use one of variants or variantsV2, matching the menu item.",
+   schema:{type:"object",properties:{...loc,restaurantId:{type:"string"},restaurantName:{type:"string"},cartItems:{type:"array",items:{type:"object",properties:{menu_item_id:{type:"string"},quantity:{type:"number"},variants:{type:"array",items:{type:"object"}},variantsV2:{type:"array",items:{type:"object",properties:{group_id:{type:["string","number"]},variation_id:{type:["string","number"]}}}},addons:{type:"array",items:{type:"object"}}},required:["menu_item_id","quantity"]}}},required:["restaurantId","cartItems","addressId"]}},
+  {server:SW, tool:"get_food_cart", desc:"Swiggy: current cart with full bill breakdown (fees, taxes, discounts) and offers.",
+   schema:{type:"object",properties:{...loc,restaurantName:{type:"string"}},required:["addressId"]}},
+  {server:SW, tool:"fetch_food_coupons", desc:"Swiggy: coupons, more offers and payment (bank/UPI) offers for the current cart, with applicability and discount amounts.",
+   schema:{type:"object",properties:{...loc,restaurantId:{type:"string"},couponCode:{type:"string"}},required:["restaurantId","addressId"]}},
+  {server:SW, tool:"apply_food_coupon", desc:"Swiggy: apply a coupon code to the cart and get the updated bill.",
+   schema:{type:"object",properties:{...loc,couponCode:{type:"string"},cartId:{type:"string"}},required:["couponCode","addressId"]}},
+  {server:ZO, tool:"get_restaurants_for_keyword", desc:"Zomato: search restaurants for a keyword near the address. Optional filter object {max_price, min_rating, distance (km), offers_tag: 'default'|'DOTD'|'GOLD'|'BOGO', flash_sale, near_and_fast}. Distance limits like 'under 7km' can also go in the keyword: 'pizza from restaurants under 7km'.",
+   schema:{type:"object",properties:{address_id:{type:"string"},keyword:{type:"string"},page_size:{type:"integer"},filter:{type:"object"}},required:["address_id","keyword"]}},
+  {server:ZO, tool:"get_menu_items_listing", desc:"Zomato: dish names mapped to categories for a restaurant (res_id integer).",
+   schema:{type:"object",properties:{address_id:{type:"string"},res_id:{type:"integer"},menu_filter:{type:"object"}},required:["res_id","address_id"]}},
+  {server:ZO, tool:"get_restaurant_menu_by_categories", desc:"Zomato: full item details (variant_id starting v_, add-on ids starting ctl_, prices) for given categories.",
+   schema:{type:"object",properties:{address_id:{type:"string"},res_id:{type:"integer"},categories:{type:"array",items:{type:"string"}},menu_filter:{type:"object"}},required:["res_id","categories","address_id"]}},
+  {server:ZO, tool:"create_cart", desc:"Zomato: build a cart (no order is placed). items is an array of {variant_id: 'v_...', quantity: integer, add_ons?: [{id: 'ctl_...', quantity: integer}]}. Returns the bill with offers applied; trust total_amount. Use payment_type 'upi'.",
+   schema:{type:"object",properties:{address_id:{type:"string"},res_id:{type:"integer"},payment_type:{type:"string",enum:["upi","cash_on_delivery"]},items:{type:"array",items:{type:"object",properties:{variant_id:{type:"string"},quantity:{type:"integer"},add_ons:{type:"array",items:{type:"object",properties:{id:{type:"string"},quantity:{type:"integer"}}}}},required:["variant_id","quantity"]}}},required:["res_id","items","address_id","payment_type"]}},
+  {server:ZO, tool:"get_cart_offers", optional:true, desc:"Zomato: offers available for the current cart.", schema:null}
+];
+const LABEL = {
+  search_restaurants:"Searching Swiggy restaurants", search_menu:"Looking up Swiggy dishes", get_restaurant_menu:"Reading a Swiggy menu",
+  update_food_cart:"Pricing a Swiggy cart", get_food_cart:"Reading Swiggy bill", fetch_food_coupons:"Checking Swiggy coupons", apply_food_coupon:"Trying a Swiggy coupon",
+  get_restaurants_for_keyword:"Searching Zomato restaurants", get_menu_items_listing:"Reading a Zomato menu", get_restaurant_menu_by_categories:"Reading Zomato dishes",
+  create_cart:"Pricing a Zomato cart", get_cart_offers:"Checking Zomato offers"
+};
+
+/* ---------- UI helpers ---------- */
+function setChip(which, state, text){
+  const el = $(which === SW ? "chipS" : "chipZ");
+  el.className = "chip " + state;
+  el.lastChild.textContent = text ? `${which}: ${text}` : which;
+}
+function errText(server, e){
+  const c = e && e.code;
+  if (c === "server_not_connected") return `Add ${server} in claude.ai Settings, Connectors`;
+  if (c === "needs_reauth") return `Reconnect ${server} in claude.ai Settings, Connectors`;
+  if (c === "not_in_manifest" || c === "approval_required" || c === "consent_required") return `allow ${server} for this page, then tap again`;
+  if (c === "selection_required") return `choose which ${server} connector to use`;
+  if (c === "server_unavailable") return `${server} is not responding, try again`;
+  return (e && e.message) ? e.message.slice(0,120) : "something went wrong";
+}
+function log(msg){ const li=document.createElement("li"); li.textContent=msg; $("log").appendChild(li); $("log").scrollTop=1e6; }
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const rupee = n => (n===null||n===undefined||n==="") ? "" : "₹" + Math.round(Number(n)).toLocaleString("en-IN");
+
+/* ---------- addresses ---------- */
+/* Robust address parsing: works whatever shape the connector returns. */
+const ID_KEYS = ["address_id","addressId","addressID","id","address_uuid"];
+const LABEL_KEYS = ["label","annotation","tag","name","type"];
+const TEXT_KEYS = ["location_name","displayAddress","display_address","formattedAddress","formatted_address","fullAddress","full_address","address","addressLine","address_line","line1","area"];
+function pick(o, keys){ for (const k of keys){ const v = o[k]; if (v !== undefined && v !== null && v !== "" && typeof v !== "object") return String(v); } return ""; }
+function asItem(o){
+  const id = pick(o, ID_KEYS); if (!id) return null;
+  let text = pick(o, TEXT_KEYS);
+  if (!text){ text = Object.values(o).filter(v => typeof v === "string" && v.length > 8 && v !== id).join(", "); }
+  return {id, label: pick(o, LABEL_KEYS), text};
+}
+function findArrays(v, depth=0, out=[]){
+  if (depth > 6 || v === null || typeof v !== "object") return out;
+  if (Array.isArray(v)){
+    const items = v.filter(x => x && typeof x === "object" && !Array.isArray(x)).map(asItem).filter(Boolean);
+    if (items.length) out.push(items);
+    v.forEach(x => findArrays(x, depth+1, out));
+  } else Object.values(v).forEach(x => findArrays(x, depth+1, out));
+  return out;
+}
+function textsOf(result){
+  const t = [];
+  if (result && typeof result.payload === "string") t.push(result.payload);
+  for (const b of (result?.content || [])) if (b && b.type === "text" && b.text) t.push(b.text);
+  return t;
+}
+function parseAddresses(result){
+  const candidates = [result?.payload, result?.structuredContent];
+  for (const s of textsOf(result)){ try { candidates.push(JSON.parse(s)); } catch(e){} }
+  let best = [];
+  for (const c of candidates){ for (const arr of findArrays(c)) if (arr.length > best.length) best = arr; }
+  if (best.length) return best;
+  // Text format, e.g. "1. [Home] Name: street ... (ID: abc_123)"
+  const out = [];
+  for (const s of textsOf(result)){
+    const re = /^\s*\d+\.\s+\[([^\]]*)\]\s*(.*)\(ID:\s*([A-Za-z0-9_-]+)\)\s*$/gm;
+    let m; while ((m = re.exec(s))) out.push({id:m[3], label:m[1], text:m[2].trim()});
+    if (!out.length){
+      const re2 = /(?:ID|id)\s*[:=]\s*"?([A-Za-z0-9_-]{4,})"?/g;
+      while ((m = re2.exec(s))) out.push({id:m[1], label:"", text:s.slice(Math.max(0,m.index-80), m.index).replace(/\s+/g," ").trim()});
+    }
+  }
+  const seen = new Set();
+  return out.filter(a => !seen.has(a.id) && seen.add(a.id));
+}
+function words(s){ return new Set(String(s).toLowerCase().match(/[a-z0-9]{3,}/g) || []); }
+function bestMatch(target, list){
+  const t = words(target.text); let best=null, score=-1;
+  for (const a of list){ let s=0; for (const w of words(a.text)) if (t.has(w)) s++; if (s>score){score=s;best=a;} }
+  return best;
+}
+let addrS=[], addrZ=[];
+function fill(sel, list, chosen){
+  if (!list.length){ sel.innerHTML = `<option value="">No saved addresses found</option>`; return; }
+  sel.innerHTML = list.map(a => `<option value="${esc(a.id)}">${esc([a.label, a.text.slice(0,70)].filter(Boolean).join(": ") || a.id)}</option>`).join("");
+  if (chosen && list.some(a=>a.id===chosen)) sel.value = chosen;
+}
+async function loadAddresses(){
+  if (!mcp) return;
+  $("loadBtn").disabled = true; $("connMsg").textContent = "Loading…";
+  setChip(SW,"wait"); setChip(ZO,"wait");
+  const [rs, rz] = await Promise.allSettled([
+    mcp.callTool(SW, "get_addresses", {}, {cache:false}),
+    mcp.callTool(ZO, "get_saved_addresses_for_user", {}, {cache:false})
+  ]);
+  let msgs = [];
+  if (rs.status === "fulfilled"){ addrS = parseAddresses(rs.value); setChip(SW,"ok","connected"); }
+  else { setChip(SW,"bad","not ready"); msgs.push(errText(SW, rs.reason)); }
+  if (rz.status === "fulfilled"){ addrZ = parseAddresses(rz.value); setChip(ZO,"ok","connected"); }
+  else { setChip(ZO,"bad","not ready"); msgs.push(errText(ZO, rz.reason)); }
+  if (rs.status === "fulfilled" && !addrS.length) msgs.push("Couldn't list Swiggy addresses, type your area below instead");
+  if (rz.status === "fulfilled" && !addrZ.length) msgs.push("Couldn't list Zomato addresses, type your area below instead");
+  $("addrBox").classList.remove("hidden");
+  {
+    fill($("addrS"), addrS, store.get("addrS"));
+    const savedZ = store.get("addrZ");
+    fill($("addrZ"), addrZ, savedZ);
+    if (!savedZ && addrS.length && addrZ.length){
+      const cur = addrS.find(a=>a.id===$("addrS").value); const m = cur && bestMatch(cur, addrZ); if (m) $("addrZ").value = m.id;
+    }
+  }
+  $("connMsg").textContent = msgs.length ? msgs.join(". ") : "Pick the same place on both apps.";
+  $("loadBtn").disabled = false; $("loadBtn").textContent = "Reload addresses";
+  refreshSchemas();
+}
+$("addrS").addEventListener("change", e => {
+  store.set("addrS", e.target.value);
+  const cur = addrS.find(a=>a.id===e.target.value); const m = cur && bestMatch(cur, addrZ);
+  if (m){ $("addrZ").value = m.id; store.set("addrZ", m.id); }
+});
+$("addrZ").addEventListener("change", e => store.set("addrZ", e.target.value));
+
+async function refreshSchemas(){
+  for (const t of TOOLS){
+    try { const d = await mcp.describeTool(t.server, t.tool); if (d && d.inputSchema) { t.schema = d.inputSchema; t.live = true; } }
+    catch(e){ /* keep built-in schema */ }
+  }
+}
+
+/* ---------- agent ---------- */
+function shrink(v){
+  let s = typeof v === "string" ? v : JSON.stringify(v);
+  if (s && s.length > 14000) s = s.slice(0,14000) + " …[truncated]";
+  return s;
+}
+/* Claude tool schemas must be a plain object at the root: no anyOf, oneOf, allOf, not, $schema. */
+/* Simplify every schema node: keep only basic keys, resolve anyOf/oneOf to one branch, cap nesting depth. */
+const MAX_NODE_DEPTH = 3;
+function simplify(node, depth){
+  if (!node || typeof node !== "object") return {};
+  let n = node;
+  for (const comb of ["anyOf","oneOf","allOf"]){
+    if (Array.isArray(n[comb]) && n[comb].length){
+      const branch = n[comb].find(b => b && b.type !== "null" && (b.type || b.properties || b.items));
+      if (branch && !n.properties && !n.items){
+        n = Object.assign({}, branch, n.description ? {description: n.description} : {});
+      } else {
+        n = Object.assign({}, n); delete n[comb]; // constraint-only rule (e.g. "address OR lat/long"): drop it
+      }
+    }
+  }
+  const out = {};
+  let t = n.type;
+  if (Array.isArray(t)) { t = t.filter(x => x !== "null"); if (t.length === 1) t = t[0]; if (!t.length) t = undefined; }
+  if (!t && n.properties) t = "object";
+  if (!t && n.items) t = "array";
+  if (t) out.type = t;
+  if (typeof n.description === "string") out.description = n.description.slice(0, 600);
+  if (Array.isArray(n.enum)) out.enum = n.enum.filter(v => v !== null);
+  if (depth < MAX_NODE_DEPTH){
+    if (n.properties && typeof n.properties === "object"){
+      out.properties = {};
+      for (const [k, v] of Object.entries(n.properties)) out.properties[k] = simplify(v, depth + 1);
+      if (Array.isArray(n.required)) { const r = n.required.filter(x => x in out.properties); if (r.length) out.required = r; }
+    }
+    if (n.items && typeof n.items === "object" && !Array.isArray(n.items)) out.items = simplify(n.items, depth + 1);
+  }
+  return out;
+}
+function cleanSchema(s){
+  const c = simplify(s || {}, 0);
+  c.type = "object";
+  if (!c.properties) c.properties = {};
+  return c;
+}
+function buildTools(){
+  return TOOLS.filter(t => t.schema).map(t => ({
+    name: (t.server === SW ? "swiggy_" : "zomato_") + t.tool,
+    description: t.desc,
+    inputSchema: cleanSchema(t.schema),
+    execute: async (input) => {
+      log(LABEL[t.tool] || t.tool);
+      try {
+        const r = await mcp.callTool(t.server, t.tool, input || {}, {cache:false});
+        return shrink(r.payload ?? r.content);
+      } catch(e){
+        const m = `${t.server} ${t.tool} failed (${e.code||"error"}): ${(e.message||"").slice(0,300)}`;
+        log(m.slice(0,120));
+        throw new Error(m);
+      }
+    }
+  }));
+}
+
+function buildPrompt(q){
+  return `You are DealDekho, a food deal comparison agent for India. Find the cheapest way for the user to get what they want, comparing Swiggy and Zomato, with all offers applied. You have tools for both apps. You must NEVER place an order (you have no tool for it).
+
+USER REQUEST: ${q.want}
+People: ${q.people}
+Budget cap: ${q.budget ? "₹"+q.budget+" total" : "none"}
+Veg only: ${q.veg ? "yes" : "no"}
+Payment methods the user has: ${q.pay || "not specified (only count offers anyone can use, mention bank offers separately)"}
+Swiggy addressId: ${q.addrS || "not chosen yet: call swiggy_get_addresses and pick the one matching the delivery place below"}
+Zomato address_id: ${q.addrZ || "not chosen yet: call zomato_get_saved_addresses_for_user and pick the one matching the delivery place below"}
+Delivery place: ${q.area || "the address chosen above"} (use the same place on both apps)
+
+PROCEDURE (be efficient, about 25 tool calls max in total):
+1. On each app, search for the request. Shortlist the 2 or 3 best OPEN restaurants per app (rating 4.0+ preferred, reasonable ETA, matching the request). Prefer the same restaurant chain on both apps when one exists, for an apples to apples comparison.
+2. For each shortlisted restaurant pick the right items and quantity for ${q.people} people (sensible portions; if the user named a dish, use that dish).
+3. Swiggy: update_food_cart with the items, then fetch_food_coupons, then get_food_cart for the bill. Zomato: get_menu_items_listing then get_restaurant_menu_by_categories to get variant ids, then create_cart with payment_type "upi" (no order is placed) and read the bill; call zomato_get_cart_offers if that tool exists.
+4. Final payable = items + delivery + platform + packaging + taxes minus the best coupon that applies minus the best payment offer the user actually has. Respect minimum order and max discount caps. Only use offers the tools returned; never invent coupon codes. If a tool fails, skip that option and continue.
+5. Finally, if the best option is on Swiggy, make sure the Swiggy cart holds exactly the winning items (call update_food_cart again if needed) so the user can open the app and pay.
+
+OUTPUT: when done, reply with ONLY a JSON object inside <result></result> tags, no other text:
+<result>{"best":{"app":"Swiggy|Zomato","restaurant":"","items":["2 x Paneer Biryani"],"before":0,"final":0,"coupon":"code or offer name or empty","payment":"which payment method to use or empty","eta":"30 min","why":"one short sentence"},
+"runnerUp":{same fields as best},
+"options":[{"app":"","restaurant":"","items":"short","before":0,"offer":"short","final":0,"eta":""}],
+"notes":["short tips, e.g. add a ₹40 item to unlock a ₹100 coupon", "anything that failed"]}</result>
+"before" means the full payable before discounts. Numbers are rupees as plain numbers. Write in plain English without em-dashes.`;
+}
+
+function parseResult(text){
+  const m = text.match(/<result>([\s\S]*?)<\/result>/) || text.match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  try { return JSON.parse(m[1] || m[0]); } catch(e){ return null; }
+}
+
+function renderResult(r, raw){
+  const box = $("result");
+  if (!r || !r.best){
+    box.innerHTML = `<div class="card"><b>Here's what I found</b><p style="white-space:pre-wrap">${esc(raw || "No result.")}</p></div>`;
+    return;
+  }
+  const b = r.best, ru = r.runnerUp;
+  const saved = (b.before && b.final) ? b.before - b.final : 0;
+  const openBtns = `<div class="open"><a class="s" href="https://www.swiggy.com/" target="_blank" rel="noopener">Open Swiggy</a><a class="z" href="https://www.zomato.com/" target="_blank" rel="noopener">Open Zomato</a></div>`;
+  let html = `<div class="card best">
+    <span class="tag ${esc(b.app)}">${esc(b.app)}</span> <span class="muted">Best deal</span>
+    <div style="font-weight:700;font-size:18px;margin-top:8px">${esc(b.restaurant)}</div>
+    <div class="muted">${esc((b.items||[]).join(", "))}${b.eta? " · "+esc(b.eta):""}</div>
+    <div style="margin-top:8px"><span class="price">${rupee(b.final)}</span>${b.before && b.before>b.final? `<span class="strike">${rupee(b.before)}</span>`:""}</div>
+    ${saved>0? `<div class="save">You save ${rupee(saved)}</div>`:""}
+    <div class="how">${b.coupon? `Apply <b>${esc(b.coupon)}</b>. `:""}${b.payment? `Pay with <b>${esc(b.payment)}</b>. `:""}${esc(b.why||"")}
+    ${b.app==="Swiggy"? "<br><span class='muted'>Your Swiggy cart is ready with these items.</span>":""}</div>
+    ${openBtns}
+  </div>`;
+  if (ru && ru.app){
+    html += `<div class="card"><span class="tag ${esc(ru.app)}">${esc(ru.app)}</span> <span class="muted">Runner-up</span>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><div><b>${esc(ru.restaurant)}</b><div class="muted">${esc((ru.items||[]).join?.(", ")||ru.items||"")}</div></div><div class="price" style="font-size:22px">${rupee(ru.final)}</div></div>
+      ${ru.coupon||ru.payment? `<div class="muted" style="margin-top:4px">${esc([ru.coupon, ru.payment].filter(Boolean).join(" · "))}</div>`:""}</div>`;
+  }
+  if (Array.isArray(r.options) && r.options.length){
+    html += `<div class="card"><b>All options checked</b><table style="margin-top:8px"><tr><th>App</th><th>Restaurant</th><th>Offer</th><th class="num">Final</th></tr>` +
+      r.options.map(o => `<tr><td><span class="tag ${esc(o.app)}">${esc(o.app)}</span></td><td>${esc(o.restaurant)}<div class="muted">${esc(o.items||"")}${o.eta? " · "+esc(o.eta):""}</div></td><td>${esc(o.offer||"")}</td><td class="num"><b>${rupee(o.final)}</b>${o.before&&o.before>o.final? `<div class="muted" style="text-decoration:line-through">${rupee(o.before)}</div>`:""}</td></tr>`).join("") +
+      `</table></div>`;
+  }
+  if (Array.isArray(r.notes) && r.notes.length){
+    html += `<div class="card"><b>Tips</b><ul style="margin:6px 0 0;padding-left:18px">${r.notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></div>`;
+  }
+  box.innerHTML = html;
+  box.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+/* ---------- search history (last 3, this browser) ---------- */
+function getHist(){ try { return JSON.parse(store.get("hist") || "[]"); } catch(e){ return []; } }
+function saveHist(q, r, raw){
+  const h = getHist();
+  h.unshift({q, r, raw: r ? "" : String(raw||"").slice(0,4000), at: Date.now()});
+  store.set("hist", JSON.stringify(h.slice(0,3)));
+  renderHist();
+}
+function ago(t){
+  const m = Math.round((Date.now()-t)/60000);
+  if (m < 1) return "just now"; if (m < 60) return m + " min ago";
+  const h = Math.round(m/60); if (h < 24) return h + " hr ago";
+  return new Date(t).toLocaleDateString("en-IN", {day:"numeric", month:"short"});
+}
+function renderHist(){
+  const h = getHist();
+  $("histCard").classList.toggle("hidden", !h.length);
+  $("hist").innerHTML = h.map((e,i) => {
+    const b = e.r && e.r.best;
+    const sub = b ? `${esc(b.app)} · ${esc(b.restaurant)} · <b>${rupee(b.final)}</b>` : "No clear winner";
+    return `<div class="h-item">
+      <div class="h-main" data-view="${i}">
+        <div class="h-q">${esc(e.q.want)}</div>
+        <div class="muted">${sub} · ${ago(e.at)}${e.q.people>1? " · "+e.q.people+" people":""}</div>
+      </div>
+      <button class="h-btn" data-rerun="${i}">Run again</button>
+    </div>`;
+  }).join("");
+}
+$("hist").addEventListener("click", e => {
+  const h = getHist();
+  const v = e.target.closest("[data-view]"), rr = e.target.closest("[data-rerun]");
+  if (v){ const it = h[+v.dataset.view]; if (it){ renderResult(it.r, it.raw); const n=document.createElement("p"); n.className="muted"; n.style.textAlign="center"; n.textContent = "Saved result from " + ago(it.at) + ". Tap Run again for live prices."; $("result").prepend(n); } }
+  if (rr){
+    const it = h[+rr.dataset.rerun]; if (!it) return;
+    $("want").value = it.q.want || ""; $("people").value = it.q.people || 1; $("budget").value = it.q.budget || "";
+    $("veg").checked = !!it.q.veg; if (it.q.pay) $("pay").value = it.q.pay; if (it.q.area) $("area").value = it.q.area;
+    if (it.q.addrS && [...$("addrS").options].some(o=>o.value===it.q.addrS)) $("addrS").value = it.q.addrS;
+    if (it.q.addrZ && [...$("addrZ").options].some(o=>o.value===it.q.addrZ)) $("addrZ").value = it.q.addrZ;
+    findDeal();
+  }
+});
+$("histClear").addEventListener("click", () => { store.set("hist","[]"); renderHist(); });
+
+async function findDeal(){
+  if (!mcp || !sample){ $("noMcp").classList.remove("hidden"); return; }
+  const q = {
+    want: $("want").value.trim(), people: Math.max(1, parseInt($("people").value)||1),
+    budget: $("budget").value.trim(), veg: $("veg").checked, pay: $("pay").value.trim(),
+    addrS: $("addrS").value, addrZ: $("addrZ").value, area: $("area").value.trim()
+  };
+  if (!q.want){ $("want").focus(); return; }
+  if ((!q.addrS || !q.addrZ) && !q.area){
+    $("connMsg").textContent = "Pick an address for each app, or type where to deliver in the box below.";
+    $("addrBox").classList.remove("hidden"); $("area").focus(); return;
+  }
+  store.set("pay", q.pay); store.set("area", q.area);
+  if (q.addrS) store.set("addrS", q.addrS); if (q.addrZ) store.set("addrZ", q.addrZ);
+
+  $("go").disabled = true; $("result").innerHTML = ""; $("log").innerHTML = "";
+  $("progress").classList.remove("hidden");
+  $("progTitle").innerHTML = '<span class="spin"></span>Checking both apps…';
+  abortCtl = new AbortController();
+  try {
+    const res = await sample(buildPrompt(q), {tools: buildTools(), modelTier: "complex", cache: false, signal: abortCtl.signal});
+    $("progTitle").textContent = "Done";
+    const parsed = parseResult(res.text || "");
+    renderResult(parsed, res.text);
+    saveHist(q, parsed, res.text);
+  } catch(e){
+    $("progTitle").textContent = "Stopped";
+    const c = e && e.code;
+    const msg = c === "not_granted" ? "This page needs permission to ask Claude. Allow it and try again."
+      : c === "rate_limited" ? "Too many searches just now. Wait a minute and try again."
+      : c === "cancelled" || e?.name === "AbortError" ? "Search stopped."
+      : "Something went wrong: " + ((e && e.message) || "unknown error");
+    $("result").innerHTML = `<div class="card warn">${esc(msg)}</div>`;
+  } finally {
+    $("go").disabled = false; abortCtl = null;
+  }
+}
+
+/* ---------- wiring ---------- */
+$("loadBtn").addEventListener("click", loadAddresses);
+$("go").addEventListener("click", findDeal);
+$("stop").addEventListener("click", () => abortCtl && abortCtl.abort());
+$("quick").addEventListener("click", e => { if (e.target.tagName === "BUTTON") $("want").value = e.target.textContent; });
+$("pay").value = store.get("pay") || "";
+$("area").value = store.get("area") || "";
+renderHist();
+
+(async () => {
+  if (!window.claude || !window.claude.use){ $("noMcp").classList.remove("hidden"); return; }
+  const [m, s, d] = await Promise.all([claude.use("mcp"), claude.use("sample"), claude.use("dictation")]);
+  mcp = m; sample = s;
+  if (!mcp || !sample){ $("noMcp").classList.remove("hidden"); return; }
+  try {
+    const lt = await mcp.listTools();
+    for (const srv of [SW, ZO]){
+      const info = lt.servers.find(x => x.server === srv);
+      if (!info) setChip(srv, "bad", "not added");
+      else if (info.authStatus === "needs_reauth") setChip(srv, "bad", "reconnect");
+      else setChip(srv, "", "tap load");
+    }
+  } catch(e){}
+  if (d){
+    const mic = $("mic"); mic.style.display = "block"; let on = false;
+    d.onFinal(({text}) => { $("want").value = ($("want").value + " " + text).trim(); });
+    d.onState(({state}) => { on = state === "listening"; mic.classList.toggle("on", on); });
+    mic.addEventListener("click", () => { if (on) d.stop().catch(()=>{}); else d.start().catch(()=>{}); });
+  }
+})();
+</script>
+</body>
+</html>
